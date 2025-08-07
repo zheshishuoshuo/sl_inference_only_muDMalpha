@@ -4,56 +4,30 @@ import os
 from scipy.interpolate import RegularGridInterpolator
 
 
-
-
-def load_A_phys_interpolator_4d(filename='A_phys_table_4D_dummy.csv'):
+def load_A_interpolator_2d(filename="A_eta_table_alpha.csv"):
     df = pd.read_csv(filename)
 
-    mu_unique = np.sort(df['mu_DM'].unique())
-    sigma_unique = np.sort(df['sigma_DM'].unique())
-    beta_unique = np.sort(df['beta_DM'].unique())
-    # xi_unique = np.sort(df['xi_DM'].unique())
+    mu_unique = np.sort(df["mu_DM"].unique())
+    alpha_unique = np.sort(df["alpha"].unique())
 
-    shape = (
-        len(mu_unique),
-        len(sigma_unique),
-        len(beta_unique),
-        # len(xi_unique),
-    )
+    shape = (len(mu_unique), len(alpha_unique))
     values = (
-        df.set_index(['mu_DM', 'sigma_DM', 'beta_DM'])
-        .sort_index()['A']
+        df.set_index(["mu_DM", "alpha"])  # type: ignore[index]
+        .sort_index()["A"]
         .values.reshape(shape)
     )
 
     interp = RegularGridInterpolator(
-        (mu_unique, sigma_unique, beta_unique,),
-        values,
-        bounds_error=False,
-        fill_value=None,
+        (mu_unique, alpha_unique), values, bounds_error=False, fill_value=None
     )
     return interp
 
 
-prec = 'low'  # 默认精度
-
-# if prec == 'low':
-#     A_interp = load_A_phys_interpolator_4d(
-#         os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_new.csv')
-#     )
-# elif prec == 'high':
-#     A_interp = load_A_phys_interpolator_4d(
-#         os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_new.csv')
-#     )
-
-# A_interp = load_A_phys_interpolator_4d(
-#     os.path.join(os.path.dirname(__file__), 'tables', 'A_phys_table_4D_test.csv')
-# )
-
-A_interp = load_A_phys_interpolator_4d(
-    os.path.join(os.path.dirname(__file__), 'A_eta_table.csv')
+A_interp = load_A_interpolator_2d(
+    os.path.join(os.path.dirname(__file__), "A_eta_table_alpha.csv")
 )
 
+
 # === A_interp wrapper ===
-def cached_A_interp(mu0, sigma, beta):
-    return A_interp((mu0, sigma, beta))
+def cached_A_interp(mu0, alpha):
+    return A_interp((mu0, alpha))

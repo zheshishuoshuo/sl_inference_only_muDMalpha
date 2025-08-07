@@ -181,7 +181,7 @@ def log_likelihood(
     muDM, alpha = theta
 
     try:
-        A_eta = cached_A_interp(muDM, SIGMA_DM, BETA_DM)
+        A_eta = cached_A_interp(muDM, alpha)
         if not np.isfinite(A_eta) or A_eta <= 0:
             return -np.inf
     except Exception:
