@@ -29,6 +29,8 @@ from .config import OBS_SCATTER_STAR, OBS_SCATTER_MAG
 
 # Parameters of the generative model (default: deVauc) used for sizes
 MODEL_P = MODEL_PARAMS["deVauc"]
+BETA_DM = MODEL_P["beta_h"]
+SIGMA_DM = MODEL_P["sigma_h"]
 
 # Source magnitude prior parameters
 ALPHA_S = -1.3
@@ -84,19 +86,10 @@ def precompute_grids(
 
 
 def log_prior(theta: Sequence[float]) -> float:
-    """Simple flat priors for the population hyper-parameters.
+    """Flat priors for ``(muDM, alpha)``."""
 
-    ``theta`` is expected to contain ``(mu0, beta, sigmaDM, mu_alpha, sigma_alpha)``.
-    """
-
-    mu0, beta, sigmaDM, mu_alpha, sigma_alpha = theta
-    if not (
-        10.0 < mu0 < 16.0
-        and 0 < sigmaDM < 10
-        and 0. < sigma_alpha < 5
-        and -0.5 < mu_alpha < 1
-        and -5 < beta < 10
-    ):
+    muDM, alpha = theta
+    if not (10.0 < muDM < 16.0 and -0.5 < alpha < 1.0):
         return -np.inf
     return 0.0
 
@@ -105,14 +98,10 @@ def _single_lens_likelihood(
     grid: LensGrid,
     logM_sps_obs: float,
     theta: Sequence[float],
-    logalpha_grid: np.ndarray,
 ) -> float:
-    """Evaluate the integral for one lens on the supplied grids.
+    """Evaluate the integral for one lens on the supplied grids."""
 
-    The halo--mass prior is conditioned on the SPS-based stellar mass.
-    """
-
-    mu0, beta, sigmaDM, mu_alpha, sigma_alpha = theta
+    muDM, alpha = theta
 
     # Extract arrays and mask invalid entries
     mask = (
@@ -144,24 +133,19 @@ def _single_lens_likelihood(
 
     # Halo–mass relation conditioned on the SPS-based stellar mass
     p_logMh = norm.pdf(
-        logMh[None, :],
-        loc=mu0 + beta * ((logM_star[None, :] - logalpha_grid[:, None]) - 11.4),
-        scale=sigmaDM,
+        logMh,
+        loc=muDM + BETA_DM * ((logM_star - alpha) - 11.4),
+        scale=SIGMA_DM,
     )
-    p_logalpha = norm.pdf(logalpha_grid, loc=mu_alpha, scale=sigma_alpha)
-
 
     scatter_Mstar = OBS_SCATTER_STAR  # Measurement scatter
-
-
 
     # Stellar-mass likelihood (measurement scatter of 0.1 dex)
     p_Mstar = norm.pdf(
         logM_sps_obs,
-        loc=logM_star[None, :] - logalpha_grid[:, None],
-        scale=scatter_Mstar,  # Measurement scatter
+        loc=logM_star - alpha,
+        scale=scatter_Mstar,
     )
-
 
     # ==== 模型参数 ====
     a = 10 ** MODEL_P["log_s_star"]
@@ -170,23 +154,19 @@ def _single_lens_likelihood(
 
     # ==== skew-normal prior on SPS mass ====
     p_Msps_prior = skewnorm.pdf(
-        logM_star[None, :] - logalpha_grid[:, None],  # SPS mass
+        logM_star - alpha,
         a=a,
         loc=loc,
         scale=scale,
-)
+    )
 
     # Size likelihood using the same relation as in the mock generator
-    mu_Re = MODEL_P["mu_R0"] + MODEL_P["beta_R"] * (
-        (logM_star[None, :] - logalpha_grid[:, None]) - 11.4
-    )
+    mu_Re = MODEL_P["mu_R0"] + MODEL_P["beta_R"] * ((logM_star - alpha) - 11.4)
     p_logRe = norm.pdf(grid.logRe, loc=mu_Re, scale=MODEL_P["sigma_R"])
 
-    Z = p_Msps_prior * p_Mstar * p_logRe * p_logalpha[:, None] * p_logMh * const[None, :]
+    Z = p_Msps_prior * p_Mstar * p_logRe * p_logMh * const
 
-    # Integrate over logalpha and logMh
-    integral_alpha = np.trapz(Z, logalpha_grid, axis=0)
-    integral = np.trapz(integral_alpha, logMh)
+    integral = np.trapz(Z, logMh)
 
     return float(max(integral, 1e-300))
 
@@ -195,30 +175,21 @@ def log_likelihood(
     theta: Sequence[float],
     grids: Sequence[LensGrid],
     logM_sps_obs: Sequence[float],
-    logalpha_grid: np.ndarray | None = None,
 ) -> float:
     """Compute the joint log-likelihood for all lenses."""
 
-    mu0, beta, sigmaDM, mu_alpha, sigma_alpha = theta
-    if sigmaDM <= 0 or sigma_alpha <= 0 or sigmaDM > 2.0 or sigma_alpha > 2.0:
-        return -np.inf
-    
-    # A_eta = 1
+    muDM, alpha = theta
 
     try:
-        A_eta = cached_A_interp(mu0, sigmaDM, beta)
+        A_eta = cached_A_interp(muDM, SIGMA_DM, BETA_DM)
         if not np.isfinite(A_eta) or A_eta <= 0:
             return -np.inf
     except Exception:
         return -np.inf
-    A_eta = 1
-
-    if logalpha_grid is None:
-        logalpha_grid = np.linspace(mu_alpha - 4 * sigma_alpha, mu_alpha + 4 * sigma_alpha, 35)
 
     logL = 0.0
     for grid, logM_obs in zip(grids, logM_sps_obs):
-        L_i = _single_lens_likelihood(grid, float(logM_obs), theta, logalpha_grid)
+        L_i = _single_lens_likelihood(grid, float(logM_obs), theta)
         if not np.isfinite(L_i) or L_i <= 0:
             return -np.inf
         logL += np.log(L_i / A_eta)
@@ -230,14 +201,13 @@ def log_posterior(
     theta: Sequence[float],
     grids: Sequence[LensGrid],
     logM_sps_obs: Sequence[float],
-    logalpha_grid: np.ndarray | None = None,
 ) -> float:
     """Posterior = prior + likelihood."""
 
     lp = log_prior(theta)
     if not np.isfinite(lp):
         return -np.inf
-    ll = log_likelihood(theta, grids, logM_sps_obs, logalpha_grid)
+    ll = log_likelihood(theta, grids, logM_sps_obs)
     if not np.isfinite(ll):
         return -np.inf
     return lp + ll

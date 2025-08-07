@@ -21,7 +21,7 @@ def plot_chain(chain: np.ndarray, fname: str = "chain_trace.png") -> None:
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.plot(chain[:, :, 0], alpha=0.3)
     ax.set_xlabel("Step")
-    ax.set_ylabel(r"$\mu_0$")
+    ax.set_ylabel(r"$\mu_{DM}$")
     fig.tight_layout()
     # fig.savefig(fname)
     # plt.close(fig)
