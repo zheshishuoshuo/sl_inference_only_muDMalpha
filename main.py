@@ -22,7 +22,7 @@ def main() -> None:
     config.OBS_SCATTER_STAR = scatter
 
     # Generate mock data for samples with fixed logalpha
-    mock_lens_data, mock_observed_data = run_mock_simulation(100, logalpha=0.1)
+    mock_lens_data, mock_observed_data = run_mock_simulation(1000, logalpha=0.1)
     logM_sps_obs = mock_observed_data["logM_star_sps_observed"].values
 
     mock_lens_data.to_csv("mock_lens_data.csv", index=False)
