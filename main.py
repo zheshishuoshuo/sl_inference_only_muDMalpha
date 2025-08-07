@@ -21,8 +21,8 @@ def main() -> None:
     scatter = 0.1  # Global measurement scatter (dex or mag)
     config.OBS_SCATTER_STAR = scatter
 
-    # Generate mock data for  samples
-    mock_lens_data, mock_observed_data = run_mock_simulation(100)
+    # Generate mock data for samples with fixed logalpha
+    mock_lens_data, mock_observed_data = run_mock_simulation(100, logalpha=0.1)
     logM_sps_obs = mock_observed_data["logM_star_sps_observed"].values
 
     mock_lens_data.to_csv("mock_lens_data.csv", index=False)
@@ -32,10 +32,16 @@ def main() -> None:
     grids = precompute_grids(mock_observed_data, logMh_grid, sigma_m=scatter)
     nsteps = 5000
     # Run MCMC sampling for 10000 steps
-    sampler = run_mcmc(grids, logM_sps_obs, nsteps=nsteps, nwalkers=20,
-                       initial_guess = np.array([12.6, 1.6, 0.3, 0., 0.0]),
-        backend_file="chains_eta_new_stage7.h5"
-                        , parallel=True, nproc=mp.cpu_count()-3)
+    sampler = run_mcmc(
+        grids,
+        logM_sps_obs,
+        nsteps=nsteps,
+        nwalkers=20,
+        initial_guess=np.array([12.6, 0.1]),
+        backend_file="chains_eta_new_stage7.h5",
+        parallel=True,
+        nproc=mp.cpu_count() - 3,
+    )
     chain = sampler.get_chain(discard=nsteps-2000, flat=True)
     print("MCMC sampling completed.")
 
@@ -43,7 +49,7 @@ def main() -> None:
 
     # 转为 DataFrame 并加上列名
     # param_names = ["param1", "param2", "param3", "param4", "param5"]  # 你可以改成实际参数名
-    param_names = [ r"$\mu_{DM0}$", r"$\beta_{DM}$", r"$\sigma_{DM}$", r"$\mu_\alpha$", r"$\sigma_\alpha$" ]  # Example parameter names
+    param_names = [r"$\mu_{DM}$", r"$\alpha$"]
 
     df_samples = pd.DataFrame(samples, columns=param_names)
 
@@ -57,7 +63,7 @@ def main() -> None:
     # )
 
     # 真值
-    true_values = [12.91, 2.04, 0.37, 0.1, 0.05]
+    true_values = [12.91, 0.1]
 
     # 绘制 pairplot
     g = sns.pairplot(

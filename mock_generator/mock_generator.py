@@ -83,11 +83,10 @@ def run_mock_simulation(
     process=None,
     alpha_s=-1.3,
     m_s_star=24.5,
+    logalpha: float = 0.1,
 ):
     beta_samp = np.random.rand(n_samples)**0.5
-    # alpha_sps = np.random.normal(loc=1.2, scale=0.2, size=n_samples)
-    # logalpha_sps_sample = np.log10(alpha_sps)
-    logalpha_sps_sample = np.random.normal(loc=0.1, scale=0.05, size=n_samples)  # Example logalpha_sps
+    logalpha_sps_sample = np.full(n_samples, logalpha)
     samples = generate_samples(n_samples, alpha_s=alpha_s, m_s_star=m_s_star)
 
     if process is None or process == 0:
