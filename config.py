@@ -1,8 +1,15 @@
 """Global configuration for simulation and inference parameters."""
 
-# Measurement scatter for observed quantities (dex or mag)
-OBS_SCATTER_STAR: float = 0.01
-OBS_SCATTER_MAG: float = 0.1
+from dataclasses import dataclass
 
-# 0.2/40=0.005
 
+@dataclass(frozen=True)
+class ScatterConfig:
+    """Measurement scatter settings for observables."""
+
+    star: float = 0.01  # Scatter on log stellar mass [dex]
+    mag: float = 0.1    # Scatter on observed magnitudes [mag]
+
+
+# Global scatter configuration used throughout the package
+SCATTER = ScatterConfig()
