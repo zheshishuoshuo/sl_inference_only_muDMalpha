@@ -99,12 +99,12 @@ def ms_distribution(ms_grid, alpha_s=-1.3, ms_star=24.5):
 
 
 def build_eta_grid():
-    mu_DM_grid = np.linspace(12, 14.0, 100)
-    alpha_grid = np.linspace(-0.3, 0.5, 20)
+    mu_DM_grid = np.linspace(12.5, 13.2, 100)
+    alpha_grid = np.linspace(0.07, 0.13, 40)
     return mu_DM_grid, alpha_grid
 
 
-def compute_A_eta(n_samples=10000, ms_points=15, m_lim=26.5, lens_file="lens_samples.csv"):
+def compute_A_eta(n_samples=5000, ms_points=15, m_lim=26.5, lens_file="lens_samples.csv"):
     """Compute normalization grid A(eta).
 
     If a cached lens sample file exists with the requested number of samples,
@@ -158,7 +158,9 @@ def compute_A_eta(n_samples=10000, ms_points=15, m_lim=26.5, lens_file="lens_sam
     sigma_DM = MODEL_P["sigma_h"]
 
     for j, alpha in enumerate(tqdm(alpha_grid, desc="alpha loop")):
-        logM_star = samples["logM_star_sps"] + alpha
+        # logM_star = samples["logM_star_sps"] + alpha
+        logM_star = samples["logM_star_sps"] + alpha + np.random.normal(0, 0.01, size=n_samples)
+
         mu1, mu2 = compute_magnifications(
             logM_star,
             samples["logRe"],
@@ -191,7 +193,8 @@ def compute_A_eta(n_samples=10000, ms_points=15, m_lim=26.5, lens_file="lens_sam
             "A": A.ravel(),
         }
     )
-    df.to_csv("A_eta_table_alpha.csv", index=False)
+    path = os.path.join(os.path.dirname(__file__), "A_eta_table_alpha.csv")
+    df.to_csv(path, index=False)
     return df
 
 
