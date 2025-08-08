@@ -22,6 +22,7 @@ from typing import Iterable, List
 import numpy as np
 import pandas as pd
 
+from ..config import SCATTER
 from ..mock_generator.lens_solver import (
     compute_detJ,
     solve_lens_parameters_from_obs,
@@ -69,7 +70,7 @@ def tabulate_likelihood_grids(
     logMh_grid: Iterable[float],
     zl: float = 0.3,
     zs: float = 2.0,
-    sigma_m: float = 0.1,
+    sigma_m: float = SCATTER.mag,
     m_lim: float = 26.5,
 ) -> List[LensGrid]:
     """Compute grids of lensing quantities required by the likelihood.

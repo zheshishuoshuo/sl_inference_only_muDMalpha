@@ -21,13 +21,13 @@ if __package__ is None or __package__ == "":
     from compute_norm_acc.mock_generator.lens_solver import solve_single_lens
     from compute_norm_acc.mock_generator.lens_model import LensModel
     from compute_norm_acc.utils import selection_function
-    from compute_norm_acc.config import OBS_SCATTER_MAG
+    from compute_norm_acc.config import SCATTER
 else:
     from .mock_generator.mass_sampler import generate_samples, MODEL_PARAMS
     from .mock_generator.lens_solver import solve_single_lens
     from .mock_generator.lens_model import LensModel
     from .utils import selection_function
-    from .config import OBS_SCATTER_MAG
+    from .config import SCATTER
 
 
 def sample_lens_population(n_samples, zl=0.3, zs=2.0):
@@ -159,7 +159,7 @@ def compute_A_eta(n_samples=5000, ms_points=15, m_lim=26.5, lens_file="lens_samp
 
     for j, alpha in enumerate(tqdm(alpha_grid, desc="alpha loop")):
         # logM_star = samples["logM_star_sps"] + alpha
-        logM_star = samples["logM_star_sps"] + alpha + np.random.normal(0, 0.01, size=n_samples)
+        logM_star = samples["logM_star_sps"] + alpha + np.random.normal(0, SCATTER.star, size=n_samples)
 
         mu1, mu2 = compute_magnifications(
             logM_star,
@@ -169,8 +169,8 @@ def compute_A_eta(n_samples=5000, ms_points=15, m_lim=26.5, lens_file="lens_samp
             samples["zl"],
             samples["zs"],
         )
-        sel1 = selection_function(mu1[:, None], m_lim, ms_grid[None, :], OBS_SCATTER_MAG)
-        sel2 = selection_function(mu2[:, None], m_lim, ms_grid[None, :], OBS_SCATTER_MAG)
+        sel1 = selection_function(mu1[:, None], m_lim, ms_grid[None, :], SCATTER.mag)
+        sel2 = selection_function(mu2[:, None], m_lim, ms_grid[None, :], SCATTER.mag)
         p_det = sel1 * sel2
         w_ms = np.trapz(p_det * pdf_ms[None, :], ms_grid, axis=1)
         w_static = w_ms
