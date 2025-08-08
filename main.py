@@ -33,7 +33,7 @@ def main() -> None:
         nsteps=nsteps,
         nwalkers=20,
         initial_guess=np.array([12.6, 0.1]),
-        backend_file="chains.h5",
+        backend_file="chains_bless_new1.h5",
         parallel=True,
         nproc=mp.cpu_count() - 3,
     )

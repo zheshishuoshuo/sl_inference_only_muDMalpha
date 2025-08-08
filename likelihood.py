@@ -107,16 +107,19 @@ def _single_lens_likelihood(
     mask = (
         np.isfinite(grid.logM_star)
         & np.isfinite(grid.detJ)
-        & (grid.detJ > 0)
+        # & (grid.detJ > 0)
         & np.isfinite(grid.muA)
         & np.isfinite(grid.muB)
     )
     if not np.any(mask):
         return 0.0
+    
+    # detJ = np.abs(grid.detJ[mask])
 
     logMh = grid.logMh_grid[mask]
     logM_star = grid.logM_star[mask]
-    detJ = grid.detJ[mask]
+    # detJ = grid.detJ[mask]
+    detJ = np.abs(grid.detJ[mask])
     muA = grid.muA[mask]
     muB = grid.muB[mask]
     beta_w = grid.beta[mask]
@@ -193,7 +196,7 @@ def log_likelihood(
     except Exception:
         return -np.inf
     
-    A_eta = 1 
+    # A_eta = 1 
 
     logL = 0.0
     for grid, logM_obs in zip(grids, logM_sps_obs):
