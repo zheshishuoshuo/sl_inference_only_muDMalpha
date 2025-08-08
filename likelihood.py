@@ -119,6 +119,7 @@ def _single_lens_likelihood(
     detJ = grid.detJ[mask]
     muA = grid.muA[mask]
     muB = grid.muB[mask]
+    beta_w = grid.beta[mask]
 
     # Marginalize over source magnitude
     selA_ms = selection_function(muA[None, :], grid.m_lim, MS_GRID[:, None], grid.sigma_m)
@@ -129,11 +130,11 @@ def _single_lens_likelihood(
         P_MS[:, None] * selA_ms * selB_ms * p_magA_ms * p_magB_ms, MS_GRID, axis=0
     )
 
-    const = detJ * integral_ms
-    
-    # beta_w = grid.beta[mask]                     # 仅用 β（或用 2*beta/(beta_max**2) 若有 beta_max）
-    # const  = np.abs(detJ) * beta_w * integral_ms # 之前只有 detJ*integral_ms
-    # Z = p_Msps_prior * p_Mstar * p_logRe * p_logMh * const
+    # Incorporate the weighting from the source-position ``beta``.  The
+    # ``beta`` values returned by :func:`solve_lens_parameters_from_obs` are
+    # normalised by the maximum caustic scale, so a uniform distribution of
+    # sources implies a probability density proportional to ``beta``.
+    const = np.abs(detJ) * beta_w * integral_ms
 
 
     # Halo–mass relation conditioned on the SPS-based stellar mass

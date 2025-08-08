@@ -44,6 +44,9 @@ class LensGrid:
         Determinant of the Jacobian of the transformation.
     muA, muB:
         Magnifications of the two images.
+    beta:
+        Source-plane impact parameter (dimensionless) corresponding to each
+        halo-mass grid point.
     logRe:
         Observed effective radius used when generating the grid.
     m1_obs, m2_obs:
@@ -58,6 +61,7 @@ class LensGrid:
     detJ: np.ndarray
     muA: np.ndarray
     muB: np.ndarray
+    beta: np.ndarray
     logRe: float
     m1_obs: float
     m2_obs: float
@@ -111,10 +115,11 @@ def tabulate_likelihood_grids(
         detJ_list = []
         muA_list = []
         muB_list = []
+        beta_list = []
 
         for logMh in logMh_grid:
             try:
-                logM_star, _ = solve_lens_parameters_from_obs(
+                logM_star, beta = solve_lens_parameters_from_obs(
                     xA, xB, logRe, logMh, zl, zs
                 )
                 detJ = compute_detJ(xA, xB, logRe, logMh, zl, zs)
@@ -133,11 +138,13 @@ def tabulate_likelihood_grids(
                 detJ = 0.0
                 muA = np.nan
                 muB = np.nan
+                beta = np.nan
 
             logMstar_list.append(logM_star)
             detJ_list.append(detJ)
             muA_list.append(muA)
             muB_list.append(muB)
+            beta_list.append(beta)
 
         results.append(
             LensGrid(
@@ -146,6 +153,7 @@ def tabulate_likelihood_grids(
                 detJ=np.array(detJ_list),
                 muA=np.array(muA_list),
                 muB=np.array(muB_list),
+                beta=np.array(beta_list),
                 logRe=logRe,
                 m1_obs=m1_obs,
                 m2_obs=m2_obs,
