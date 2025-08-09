@@ -127,6 +127,9 @@ def _single_lens_likelihood(
     # Marginalize over source magnitude
     selA_ms = selection_function(muA[None, :], grid.m_lim, MS_GRID[:, None], grid.sigma_m)
     selB_ms = selection_function(muB[None, :], grid.m_lim, MS_GRID[:, None], grid.sigma_m)
+    # selA_ms = 1
+    # selB_ms = 1
+
     p_magA_ms = mag_likelihood(grid.m1_obs, muA[None, :], MS_GRID[:, None], grid.sigma_m)
     p_magB_ms = mag_likelihood(grid.m2_obs, muB[None, :], MS_GRID[:, None], grid.sigma_m)
     integral_ms = np.trapz(
