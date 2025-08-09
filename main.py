@@ -7,7 +7,6 @@ import multiprocessing as mp
 from .mock_generator.mock_generator import run_mock_simulation
 from .likelihood import precompute_grids
 from .run_mcmc import run_mcmc
-from .plotting import plot_chain
 from .config import SCATTER
 import matplotlib.pyplot as plt
 import matplotlib
@@ -17,7 +16,7 @@ matplotlib.use("TkAgg")  # 或者 Qt5Agg, MacOSX
 def main() -> None:
     os.remove(os.path.join(os.path.dirname(__file__), "chains", "chains.h5")) if os.path.exists(os.path.join(os.path.dirname(__file__), "chains", "chains.h5")) else None
     # Generate mock data for samples with fixed logalpha
-    mock_lens_data, mock_observed_data = run_mock_simulation(200, logalpha=0.1)
+    mock_lens_data, mock_observed_data = run_mock_simulation(1000, logalpha=0.1)
     logM_sps_obs = mock_observed_data["logM_star_sps_observed"].values
 
     mock_lens_data.to_csv("mock_lens_data.csv", index=False)
@@ -33,7 +32,7 @@ def main() -> None:
         nsteps=nsteps,
         nwalkers=20,
         initial_guess=np.array([12.6, 0.1]),
-        backend_file="chains_bless_new1.h5",
+        backend_file="chains_bless_new_test1.h5",
         parallel=True,
         nproc=mp.cpu_count() - 3,
     )

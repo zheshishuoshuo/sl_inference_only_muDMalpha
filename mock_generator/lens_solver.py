@@ -15,7 +15,7 @@ def solve_single_lens(model, beta_unit):
    def lens_equation(x):
        return model.alpha(x) - x + beta
    
-   xA = brentq(lens_equation, einstein_radius, 100*einstein_radius)
+   xA = brentq(lens_equation, einstein_radius, 300*einstein_radius)
    xB = brentq(lens_equation, -einstein_radius, -caustic_max_at_lens_plane)
    # print(caustic_max_at_lens_plane, caustic_max_at_source_plane, beta)
    return xA, xB
@@ -51,7 +51,7 @@ def solve_lens_parameters_from_obs(xA_obs, xB_obs, logRe_obs, logM_halo, zl, zs)
     M_star_solved = ((xA_obs -xB_obs) + alpha_halo(xB_obs)-alpha_halo(xA_obs))/ (alpha_star_unit(xA_obs) - alpha_star_unit(xB_obs))  # [Msun]
     beta_solved = -(alpha_star_unit(xA_obs)*(xB_obs-alpha_halo(xB_obs)) -alpha_star_unit(xB_obs)*(xA_obs-alpha_halo(xA_obs))) / (alpha_star_unit(xB_obs) - alpha_star_unit(xA_obs))  # [kpc]
 
-    another_solution_beta = M_star_solved*alpha_star_unit(xA_obs) +alpha_halo(xA_obs) - xA_obs  # [kpc]
+    # another_solution_beta = M_star_solved*alpha_star_unit(xA_obs) +alpha_halo(xA_obs) - xA_obs  # [kpc]
     
     # logbeta_solved = np.log10(beta_solved)  # [kpc]
     if M_star_solved <= 0:
@@ -59,17 +59,20 @@ def solve_lens_parameters_from_obs(xA_obs, xB_obs, logRe_obs, logM_halo, zl, zs)
         raise ValueError(f"Invalid M_star_solved = {M_star_solved}, must be > 0")
     logM_star_solved = np.log10(M_star_solved)  # [Msun]
     model = LensModel(logM_star=logM_star_solved, logM_halo=logM_halo, logRe=np.log10(Re), zl=zl, zs=zs)
-    caustic_max_at_lens_plane = model.solve_xradcrit()  # [kpc]
+    # caustic_max_at_lens_plane = model.solve_xradcrit()  # [kpc]
     caustic_max_at_source_plane = model.solve_ycaustic()  # [kpc]
     # beta = beta_unit * caustic_max_at_source_plane  # [kpc]
     beta_unit = beta_solved / caustic_max_at_source_plane  # [kpc]
     # print('truebeta',beta_solved, another_solution_beta,beta_unit)
 
+    if beta_unit < 0 or beta_unit > 1:
+        raise ValueError(f"Invalid beta_unit = {beta_unit}, must be >= 0 and <= 1")
+
     return logM_star_solved, beta_unit  
 
 
 def compute_detJ(theta1_obs, theta2_obs, logRe_obs, logMh, zl=0.3, zs=2.0):
-    delta = 1e-4  # arcsec
+    delta = 1e-4
 
     logM0, beta0 = solve_lens_parameters_from_obs(theta1_obs, theta2_obs, logRe_obs, logMh, zl, zs)
     logM1, beta1 = solve_lens_parameters_from_obs(theta1_obs + delta, theta2_obs, logRe_obs, logMh, zl, zs)
