@@ -86,8 +86,8 @@ def ms_distribution(ms_grid, alpha_s=-1.3, ms_star=24.5):
 
 
 def build_eta_grid():
-    mu_DM_grid = np.linspace(12, 14, 10)
-    alpha_grid = np.linspace(0., 0.3, 10)
+    mu_DM_grid = np.linspace(12, 14, 100)
+    alpha_grid = np.linspace(0., 0.3, 100)
     return mu_DM_grid, alpha_grid
 
 

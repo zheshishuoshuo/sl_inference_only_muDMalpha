@@ -196,7 +196,7 @@ def log_likelihood(
     except Exception:
         return -np.inf
     
-    # A_eta = 1 
+    A_eta = 1 
 
     logL = 0.0
     for grid, logM_obs in zip(grids, logM_sps_obs):
