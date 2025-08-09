@@ -114,7 +114,7 @@ def _single_lens_likelihood(
     if not np.any(mask):
         return 0.0
     
-    # detJ = np.abs(grid.detJ[mask])
+    detJ = np.abs(grid.detJ[mask])
 
     logMh = grid.logMh_grid[mask]
     logM_star = grid.logM_star[mask]
@@ -123,6 +123,8 @@ def _single_lens_likelihood(
     muA = grid.muA[mask]
     muB = grid.muB[mask]
     beta_w = grid.beta[mask]
+
+    # logMh = grid.logMh_grida_w contains NaN values, check the grid data.")
 
     # Marginalize over source magnitude
     selA_ms = selection_function(muA[None, :], grid.m_lim, MS_GRID[:, None], grid.sigma_m)

@@ -161,7 +161,7 @@ def compute_A_eta(n_samples=5000, ms_points=100, m_lim=26.5, lens_file="lens_sam
         p_det = sel1 * sel2
         # p_det = np.ones((n_samples, ms_grid.size))
         w_ms = np.trapz(p_det * pdf_ms[None, :], ms_grid, axis=1)
-        w_static = w_ms
+        w_static = w_ms 
 
         for logM_sps_i, logMh_i, w_i in zip(
             samples["logM_star_sps"], samples["logMh"], w_static
